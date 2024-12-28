@@ -1,0 +1,65 @@
+name: 'Update image URI then deploy - Dokploy'
+description: 'Deploy an application with image URI to Dokploy'
+branding:
+  icon: 'upload-cloud'
+  color: 'gray-dark'
+inputs:
+  dokploy_url:
+    description: 'Dokploy base URL, e.g. https://dokploy.example.com'
+    required: true
+  api_token:
+    description: 'Dokploy API token'
+    required: true
+  application_id:
+    description: 'Dokploy application ID'
+    required: true
+  image_uri:
+    description: 'Image URI'
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - name: Update app docker provider
+      shell: bash
+      env:
+        DOKPLOY_URL: ${{ inputs.dokploy_url }}
+        DOKPLOY_API_TOKEN: ${{ inputs.api_token }}
+        DOKPLOY_APPLICATION_ID: ${{ inputs.application_id }}
+        DOKPLOY_IMAGE_URI: ${{ inputs.image_uri }}
+      run: |
+        response=$(curl -X 'POST' \
+          "$DOKPLOY_URL/api/application.saveDockerProvider" \
+          -H 'Accept: application/json' \
+          -H 'Content-Type: application/json' \
+          -H "Authorization: Bearer $DOKPLOY_API_TOKEN" \
+          -d "{\"applicationId\": \"$DOKPLOY_APPLICATION_ID\", \"dockerImage\": \"$DOKPLOY_IMAGE_URI\"}" \
+          -w "%{http_code}" \
+          -o /dev/null \
+          -s)
+
+        if [ "$response" -ne 200 ]; then
+          echo "Updating app docker provider failed with status code: $response"
+          exit 1
+        fi
+
+    - name: Trigger deployment
+      shell: bash
+      env:
+        DOKPLOY_URL: ${{ inputs.dokploy_url }}
+        DOKPLOY_API_TOKEN: ${{ inputs.api_token }}
+        DOKPLOY_APPLICATION_ID: ${{ inputs.application_id }}
+      run: |
+        response=$(curl -X 'POST' \
+          "$DOKPLOY_URL/api/application.deploy" \
+          -H 'Accept: application/json' \
+          -H 'Content-Type: application/json' \
+          -H "Authorization: Bearer $DOKPLOY_API_TOKEN" \
+          -d "{\"applicationId\": \"$DOKPLOY_APPLICATION_ID\"}" \
+          -w "%{http_code}" \
+          -o /dev/null \
+          -s)
+        
+        if [ "$response" -ne 200 ]; then
+          echo "Deployment failed with status code: $response"
+          exit 1
+        fi
