@@ -77,6 +77,30 @@ runs:
         DOKPLOY_API_TOKEN: ${{ inputs.api_token }}
         DOKPLOY_COMPOSE_ID: ${{ inputs.compose_id }}
       run: |
+        response=$(curl -s -X 'GET' \
+          "$DOKPLOY_URL/api/compose.one?composeId=$DOKPLOY_COMPOSE_ID" \
+          -H 'Accept: application/json' \
+          -H "Authorization: Bearer $DOKPLOY_API_TOKEN" \
+        )
+        
+        app_name=$(echo $response | jq -r '.appName')
+        stack_command="stack deploy -c docker-compose.yml --with-registry-auth $app_name --prune"
+        
+        response=$(curl -X 'POST' \
+          "$DOKPLOY_URL/api/compose.update" \
+          -H 'Accept: application/json' \
+          -H 'Content-Type: application/json' \
+          -H "Authorization: Bearer $DOKPLOY_API_TOKEN" \
+          -d "{\"composeId\": \"$DOKPLOY_COMPOSE_ID\", \"command\": \"$stack_command\"}" \
+          -w "%{http_code}" \
+          -o /dev/null \
+          -s)
+
+        if [ "$response" -ne 200 ]; then
+          echo "Deployment failed with status code: $response"
+          exit 1
+        fi
+
         response=$(curl -X 'POST' \
           "$DOKPLOY_URL/api/compose.deploy" \
           -H 'Accept: application/json' \
