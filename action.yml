@@ -35,7 +35,7 @@ runs:
           "$DOKPLOY_URL/api/application.saveDockerProvider" \
           -H 'Accept: application/json' \
           -H 'Content-Type: application/json' \
-          -H "Authorization: Bearer $DOKPLOY_API_TOKEN" \
+          -H "x-api-key: $DOKPLOY_API_TOKEN" \
           -d "{\"applicationId\": \"$DOKPLOY_APPLICATION_ID\", \"dockerImage\": \"$DOKPLOY_IMAGE_URI\"}" \
           -w "%{http_code}" \
           -o /dev/null \
@@ -58,7 +58,7 @@ runs:
           "$DOKPLOY_URL/api/application.deploy" \
           -H 'Accept: application/json' \
           -H 'Content-Type: application/json' \
-          -H "Authorization: Bearer $DOKPLOY_API_TOKEN" \
+          -H "x-api-key: $DOKPLOY_API_TOKEN" \
           -d "{\"applicationId\": \"$DOKPLOY_APPLICATION_ID\"}" \
           -w "%{http_code}" \
           -o /dev/null \
@@ -80,7 +80,7 @@ runs:
         response=$(curl -s -X 'GET' \
           "$DOKPLOY_URL/api/compose.one?composeId=$DOKPLOY_COMPOSE_ID" \
           -H 'Accept: application/json' \
-          -H "Authorization: Bearer $DOKPLOY_API_TOKEN" \
+          -H "x-api-key: $DOKPLOY_API_TOKEN" \
         )
         
         app_name=$(echo $response | jq -r '.appName')
@@ -90,7 +90,7 @@ runs:
           "$DOKPLOY_URL/api/compose.update" \
           -H 'Accept: application/json' \
           -H 'Content-Type: application/json' \
-          -H "Authorization: Bearer $DOKPLOY_API_TOKEN" \
+          -H "x-api-key: $DOKPLOY_API_TOKEN" \
           -d "{\"composeId\": \"$DOKPLOY_COMPOSE_ID\", \"command\": \"$stack_command\"}" \
           -w "%{http_code}" \
           -o /dev/null \
@@ -105,7 +105,7 @@ runs:
           "$DOKPLOY_URL/api/compose.deploy" \
           -H 'Accept: application/json' \
           -H 'Content-Type: application/json' \
-          -H "Authorization: Bearer $DOKPLOY_API_TOKEN" \
+          -H "x-api-key: $DOKPLOY_API_TOKEN" \
           -d "{\"composeId\": \"$DOKPLOY_COMPOSE_ID\"}" \
           -w "%{http_code}" \
           -o /dev/null \
